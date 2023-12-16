@@ -88,37 +88,32 @@ export async function fetchCardData() {
 }
 
 const ITEMS_PER_PAGE = 6;
-export async function fetchFilteredInvoices(
+export async function fetchFilteredPatients(
   query: string,
   currentPage: number,
 ) {
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
   try {
-    const invoices = await sql<InvoicesTable>`
-      SELECT
-        invoices.id,
-        invoices.amount,
-        invoices.date,
-        invoices.status,
-        customers.name,
-        customers.email,
-        customers.image_url
-      FROM invoices
-      JOIN customers ON invoices.customer_id = customers.id
-      WHERE
-        customers.name ILIKE ${`%${query}%`} OR
-        customers.email ILIKE ${`%${query}%`} OR
-        invoices.amount::text ILIKE ${`%${query}%`} OR
-        invoices.date::text ILIKE ${`%${query}%`} OR
-        invoices.status ILIKE ${`%${query}%`}
-      ORDER BY invoices.date DESC
-      LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
-    `;
+    const query =  await fetch('https://hapi.onfhir.cl/fhir/Patient')
+    const response = await query.json();
 
-    return invoices.rows;
+    return response;
   } catch (error) {
-    console.error('Database Error:', error);
+    console.error('Error api https://hapi.onfhir.cl/fhir/Patient :', error);
+    throw new Error('Failed to fetch invoices.');
+  }
+}
+
+export async function fetchFilteredPatientEdit(id: string) {
+
+  try {
+    const query =  await fetch(`https://hapi.onfhir.cl/fhir/Patient/${id}`)
+    const response = await query.json();
+
+    return response;
+  } catch (error) {
+    console.error(`Erro API https://hapi.onfhir.cl/fhir/Patient/${id}`, error);
     throw new Error('Failed to fetch invoices.');
   }
 }
@@ -171,13 +166,23 @@ export async function fetchInvoiceById(id: string) {
 
 export async function fetchCustomers() {
   try {
-    const data = await sql<CustomerField>`
-      SELECT
-        id,
-        name
-      FROM customers
-      ORDER BY name ASC
-    `;
+    const data = {
+      rows: [
+        {
+          id: 1,
+          name: 'Pedrito'
+        },
+        {
+          id: 2,
+          name: 'Juancito'
+        },
+        {
+          id: 3,
+          name: 'Jaimecito'
+        }
+      ]
+    };
+
 
     const customers = data.rows;
     return customers;
